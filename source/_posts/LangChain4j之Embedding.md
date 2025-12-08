@@ -2,7 +2,7 @@
 title: LangChain4j之Embedding
 date: 2025-07-23 19:34:13
 tags:
-categories: LangChain4j
+categories: AI应用开发
 ---
 
 # 1. 什么是向量

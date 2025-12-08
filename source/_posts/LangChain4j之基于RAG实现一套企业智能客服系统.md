@@ -2,7 +2,7 @@
 title: LangChain4j之基于RAG实现一套企业智能客服系统
 date: 2025-08-03 21:55:24
 tags:
-categories: LangChain4j
+categories: AI应用开发
 ---
 
 # 1. 前期准备

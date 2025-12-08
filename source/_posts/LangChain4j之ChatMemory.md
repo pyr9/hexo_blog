@@ -2,7 +2,7 @@
 title: LangChain4j之ChatMemory
 date: 2025-07-21 21:57:01
 tags:
-categories: LangChain4j
+categories: AI应用开发
 ---
 
 # 1. **ChatMemory**是什么？
