@@ -2,7 +2,7 @@
 title: AI相关概念
 date: 2025-03-03 14:19:05
 tags:
-categories: 
+categories: AI应用开发
 ---
 
 # 1. AI相关概念

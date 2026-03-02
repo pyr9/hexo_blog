@@ -2,7 +2,7 @@
 title: LangChain4j之Tools
 date: 2025-07-23 22:11:53
 tags:
-categories: LangChain4j
+categories: AI应用开发
 ---
 
 # 1. **Tools是什么？**

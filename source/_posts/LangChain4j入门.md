@@ -2,7 +2,7 @@
 title: LangChain4j入门
 date: 2025-07-20 15:19:05
 tags:
-categories: LangChain4j
+categories: AI应用开发
 ---
 
 # 1. 什么是LangChain4j

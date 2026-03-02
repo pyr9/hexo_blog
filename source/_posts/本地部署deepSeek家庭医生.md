@@ -2,7 +2,7 @@
 title: 本地部署deepSeek家庭医生
 date: 2025-03-09 19:07:57
 tags:
-categories:
+categories: AI应用开发
 ---
 
 # 1. ollama

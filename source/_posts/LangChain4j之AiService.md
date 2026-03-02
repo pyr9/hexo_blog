@@ -2,7 +2,7 @@
 title: LangChain4j之AiService
 date: 2025-07-20 16:35:02
 tags:
-categories: LangChain4j
+categories: AI应用开发
 ---
 
 # 1. AiService是什么？
