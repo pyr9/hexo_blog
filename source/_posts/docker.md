@@ -214,6 +214,15 @@ Tue Apr 18 08:16:51 UTC 2023
   - 如果运行 docker run 时使用了 --entrypoint 选项，将覆盖 ENTRYPOINT 指令指定的程序。
   - 如果 Dockerfile 中如果存在多个 ENTRYPOINT 指令，仅最后一个生效。
 
+  > **模式：ENTRYPOINT 固定主程序，CMD 提供默认参数**
+  >
+  > ```
+  > FROM openjdk:8-jre
+  > COPY app.jar /app.jar
+  > ENTRYPOINT ["java", "-jar", "/app.jar"]
+  > CMD ["--spring.profiles.active=prod"]  # 默认参数
+  > ```
+  
 - **ENV**
 
   - 设置环境变量，定义了环境变量，那么在后续的指令中，就可以使用这个环境变量。
@@ -231,6 +240,7 @@ Tue Apr 18 08:16:51 UTC 2023
   - 格式：`ARG <参数名>[=<默认值>]`
 
 - **EXPOSE**
+  
   - 仅仅只是声明端口。
 
 # 6 docker数据持久化
