@@ -96,6 +96,37 @@ Netflix OSS 开源组件集成，包括Eureka、Hystrix、Ribbon、Feign、Zuul�
 
 [CAP原则以及eureka和zookeeper的对比](https://pyr9.github.io/CAP%E5%8E%9F%E5%88%99%E4%BB%A5%E5%8F%8Aeureka%E5%92%8Czookeeper%E7%9A%84%E5%AF%B9%E6%AF%94/)
 
+### 5 eureka注册中心是每次调用都从注册中心拉吗？
+
+Eureka 客户端**不会每次调用都去注册中心拉取服务列表**，它是**本地缓存 + 定时增量更新**的机制。
+
+#### 1. 工作原理
+
+**1. 启动时全量拉取一次** 客户端启动后会向 Eureka Server 拉取所有服务实例列表，缓存在本地内存中。
+
+**2. 之后每 30 秒增量更新一次（默认）** 客户端每隔一段时间（`eureka.client.registry-fetch-interval-seconds`，默认 30s）向 Server 发请求，只拉取**变化的那部分实例信息**，然后合并到本地缓存。
+
+**3. 本地有故障时才重新全量拉取** 如果长时间连不上 Server，客户端会继续用**本地缓存的服务列表**来做负载均衡和调用，直到连接恢复。
+
+#### 2. 本地缓存的作用
+
+**1. 减少注册中心压力**：不用每次调用都去查 Server。
+
+**2. 提高可用性**：Server 短暂不可用时，客户端仍能根据缓存继续调用已有服务实例。
+
+**3. 加速读取**：直接从本地内存拿服务列表，比远程调用快得多。
+
+#### 3. 配置相关参数（Spring Cloud 为例）
+
+```yml
+eureka:
+  client:
+    registry-fetch-interval-seconds: 30   # 多久拉一次增量（默认30s）
+    fetch-registry: true                  # 是否要从Server拉取注册表（默认true）
+```
+
+如果你把这个设为很大（比如 300s），那么本地缓存更新会变慢，服务上下线感知也会延迟。
+
 ## 5.2 服务调用
 
 
