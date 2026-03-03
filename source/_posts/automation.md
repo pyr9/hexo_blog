@@ -3,7 +3,7 @@ title: automation
 date: 2023-02-19 10:30:34
 tags:
 categories: 
-password: panyuro@163.com!!
+password: panyuro@163.com
 ---
 
 # 1. automation是干什么的？
