@@ -48,24 +48,27 @@ Kubernetes（通常简称为K8s）是一个开源的容器编排的工具，用�
 
 ### 1. 定义
 
-Pod 是 Kubernetes 中最小的可部署单元。一个 Pod 可以包含一个或多个容器（通常是一个），这些容器共享存储、网络和规范化的运行配置。
+Pod 是 Kubernetes 中最小的可部署单元。一个 Pod 可以包含一个或多个容器（通常是一个），所有的应用，服务最终都是运行在pod上。
 
-- 所有的应用，服务最终都是运行在pod上
-- pod有一个独立的ip，pod里的容器可以共享网络，共享IP
+**特点**
+
+- 有自己独立的 IP（Pod IP）。pod里的容器可以共享网络，共享IP
+- 生命周期短暂：一旦挂了，K8s 会新建一个 Pod，但 IP 会变。
+- 通常不直接对外暴露，而是通过 Service 访问。
 
 <img src="https://panyuro.oss-cn-beijing.aliyuncs.com/image-20250713152823707.png" alt="image-20250713152823707" style="zoom:50%;" />
 
 ### 2. pod的生命周期
 
-Pending（挂起）：API server已经创建pod并保存在Etcd当中，但这个Pod里有些容器因为某种原因而不能被顺利创建。比如，正在下载镜像的过程，配置文件有误
+Pending（挂起）：Pod 已被接受，但至少有一个容器还没启动完成（镜像在拉取、调度未完成等）。
 
-Running（运行中）：Pod内所有的容器已经创建，且至少有一个容器处于运行状态、正在启动括正在重启状态；
+Running（运行中）：Pod 已绑定到节点，所有容器都已创建，至少一个容器处于运行状态。
 
-Succeed（成功）：Pod内所有容器均已退出，且不会再重启；
+Succeed（成功）：所有容器都正常退出，且不会再重启（常见于一次性任务 Job）。
 
-Failed（失败）：Pod内所有容器均已退出，且至少有一个容器为退出失败状态
+Failed（失败）：至少有一个容器非正常退出（非 0 状态码或被系统终止）。
 
-Unknown（未知）：某于某种原因apiserver无法获取该pod的状态，可能由于网络通行问题导致；
+Unknown（未知）：控制平面无法获取 Pod 状态（网络分区等异常情况）。
 
 ### 3. pod的重启策略
 
@@ -88,41 +91,68 @@ Unknown（未知）：某于某种原因apiserver无法获取该pod的状态，�
 
 ## 2 Deployment
 
-Deployment 是一种控制器对象，用于管理 Pod 的部署和扩展。它提供了一种声明式的方法来描述期望的应用程序状态。
+Deployment 是一种控制器对象，用来声明“我要多少个 Pod、用什么镜像、怎么升级”。
 
-- Deployment 负责管理其下所有 Pod 的生命周期，包括创建、更新和删除。如果某个 Pod 失败或被删除，Deployment 会自动创建新的 Pod 来替换它。
-- 通过 Deployment，您可以定义应用程序所需的副本数量，并确保集群中始终有指定数量的 Pod 在运行。此外，Deployment 支持滚动更新（Rolling Updates）和回滚（Rollbacks），使得应用更新过程更加平滑。
+**主要职责：**
+
+1. 创建 Pod：按模板生成 Pod。
+
+2. 维持副本数：比如声明 3 个副本，挂了一个会自动补一个新 Pod。
+
+3. 滚动升级 / 回滚：镜像更新时，逐步替换旧 Pod，支持回滚到上一版本。
+4. 扩缩容：改一下副本数，自动增加或减少 Pod。
 
 ## 3 service
 
-Service 定义了一组逻辑 Pods 和访问这组 Pods 的策略，是真实服务的抽象。Service 提供了一个 IP 地址和 DNS 名称，用于稳定地访问这些 Pods。
+Service为一组 Pod 提供**稳定的网络访问方式**（ClusterIP / NodePort / LoadBalancer 等）。
 
-- 由于 Pod 是动态的，它们可能因为各种原因被销毁和重建，导致 IP 地址变化。Service 提供了一个稳定的网络端点，使得其他服务或外部用户能够可靠地与一组 Pods 进行通信，如果没有Service，pod的IP不会暴露在群集外部。
+**解决的问题**：
 
-- Service也可以用在ServiceSpec标记type的方式暴露，type类型如下：
+- Pod 会挂、会重建，IP 会变。
+- Service 通过一个固定的 DNS 名称和 ClusterIP，把流量转发到当前这批 Pod 上。
 
-  - ClusterIP（默认）：在集群的内部IP上公开Service。这种类型使得Service只能从集群内访问。
-  - NodePort：使用NAT在集群中每个选定Node的相同端口上公开Service。使用 <NodeIP>:<NodePort> 从集群外部访问Service。是ClusterIP的超集。
-  - LoadBalancer：在当前云中创建一个外部负载均衡器(如果支持的话)，并为Service分配一个固定的外部IP。是NodePort的超集。
+**常见类型**：
 
-  - ExternalName：通过返回带有该名称的CNAME记录，使用任意名称（由spec中的externalName指定）公开Service。不使用代理。
-
-  
+- ClusterIP（默认）：集群内部访问（默认）。、
+- NodePort：在每个节点开一个端口，外部可以访问。
+- LoadBalancer：云厂商提供的负载均衡入口。
+- ExternalName：通过返回带有该名称的CNAME记录，使用任意名称（由spec中的externalName指定）公开Service。不使用代理。
 
 
 > 为什么Pod已经有了IP还需要service再包一层呢？
 >
 > - 当Pod出现意外挂掉时，这个服务无法访问，他肯定会去其他位置新启动一个服务，通过service的IP依旧可以找到这个新建的服务
 
+> Deployment 管 Pod 的“生老病死和版本”，Pod 是真正干活的“小盒子”，Service 是给这些小盒子挂一个“固定门牌号”，让别人能稳定找到它们。
+
 ## 4 **Volume**
 
-Volume是Pod中能够被多个容器访问的共享目录，Kubernetes中的Volume是定义在Pod上，可以被一个或多个Pod中的容器挂载到某个目录下
+- Volume（卷）用来给 **Pod 里的容器提供持久化存储**。
+
+- 容器本身是临时的：容器删了，里面的文件就没了；Volume 可以让数据**独立于容器生命周期**保留下来。
 
 ## 5 **Namespace**
 
-Namespace用于实现多租户的资源隔离，可将集群内部的资源对象分配到不同的Namespace中，形成逻辑上的不同项目、小组或用户组，便于不同的Namespace在共享使用整个集群的资源的同时还能被分别管理；
+Namespace 是 Kubernetes 的**逻辑隔离机制**，把集群资源（Pod、Service、Deployment、Volume 等）分成不同的“虚拟集群”。
 
+**作用：**
 
+- **多环境隔离** 
+  - `dev`命名空间：开发环境资源
+  -  `test`命名空间：测试环境资源 
+  - `prod`命名空间：生产环境资源
+
+- **多团队 / 多租户隔离**
+  -  A 团队用 `team-a`命名空间 
+  -  彼此看得到但不直接干扰，RBAC 可以按 Namespace 授权。
+
+- **资源配额管理** 可以给每个 Namespace 设置 CPU、内存、Pod 数量上限，防止某团队把集群资源吃光。
+
+**默认 Namespace**
+
+- default：不指定 Namespace 时默认放这里。
+- kube-system：K8s 系统组件自己用的。
+- kube-public：公开可读的一些配置。
 
 # 4. **K8s的组件有哪些？作用是什么？**
 
@@ -193,7 +223,7 @@ kubectl create deployment nginx --image=nginx
 
 1. 这条命令首先发到master节点的网关api server，这是matser的唯一入口
 2. kube api server将命令请求交给kube controller mannager进行控制
-3. kube controller mannager 进行应用部署解析.  controller mannager 会生成一次部署信息，并通过api server将信息存入etcd存储中
+3. kube controller mannager 进行应用部署解析，会生成一次部署信息，并通过api server将信息存入etcd存储中
 4. kube scheduler调度器通过api server从etcd存储中，拿到要部署的应用，开始调度看哪个节点有资源适合部署,   scheduler把计算出来的调度信息通过api server再放到etcd中
 5. 每一个node节点的监控组件kubelet，随时和master保持联系（给api-server发送请求不断获取最新数据），拿到master节点存储在etcd中的部署信息
 6. 假设node2的kubelet拿到部署信息，显示他自己节点要部署某某应用. kubelet就自己run一个应用在当前机器上，并随时给master汇报当前应用的状态信息,  node和master也是通过master的api-server组件联系的
@@ -215,7 +245,7 @@ kubelet负责维护node节点上pod的生命周期，当kubelet监听到master�
 
 pod中可以定义启动探针、存活探针、就绪探针等3种，我们最常用的就是存活探针、就绪探针，kubelet 会定期调用容器中的探针来检测容器是否存活，是否就绪，如果是存活探针，则会根据探测结果对检查失败的容器进行相应的重启策略。
 
-## 4. Metrics Server资源监控
+## 4. 资源监控
 
 在node节点上部署Metrics Server用于监控node节点、pod的CPU、内存、文件系统、网络使用等资源使用情况，而kubelet则通过Metrics Server获取所在节点及容器的上的数据。
 

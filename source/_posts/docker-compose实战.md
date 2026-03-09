@@ -5,7 +5,21 @@ tags:
 categories: docker    
 ---
 
-# 1. 常用命令
+# 1. docker-compose 解决了什么问题
+
+Docker Compose 是一个单机环境下，用来**编排和管理多个 Docker 容器**的工具，通过一个 YAML 配置文件（`docker-compose.yml`）就能定义、启动、停止一整套应用服务。
+
+1. 多容器应用的“手工运维“
+   - 传统方式：一个典型微服务/Web 应用可能包括：前端 Nginx 容器、后端 Spring Boot 容器、MySQL 容器、Redis 容器。传统方式，需要记住每个容器的端口映射、环境变量、数据卷挂载，依次执行`docker run mysql ..., docker run redis ...`
+   - compose解决方案：把这些配置写在一个 `docker-compose.yml`里，一键启动/停止 `docker-compose up -d`, `docker-compose stop`
+2. 容器之间的网络和依赖混乱
+   - 传统方式：多个容器需要：在同一个网络中才能互相访问、有时需要按顺序启动
+   - compose解决方案：自动为项目创建一个**独立网络**，所有服务默认互通，用服务名当域名；可通过 `depends_on`声明依赖关系，控制启动顺序
+3. 开发与测试环境难以保持一致
+   - 传统方式：一堆 `docker run`命令，很容易配置不一致
+   - compose解决方案： 把环境配置写成 `docker-compose.yml`，放进 Git 仓库
+
+# 2. 常用命令
 
 1. 前台启动, 启动项目中的所有服务 `docker-compose up`
 
@@ -32,11 +46,18 @@ categories: docker
 10. 进入容器
    -  `进入指定服务的容器` `docker-compose exec nginx bash`
 
-# 2. 实战使用
+## 3. docker-compose、docker-swarm、k8区别
+
+- **docker-compose**： 单机环境下，**编排多个容器**（定义服务、网络、卷）。适合：本地开发、测试、单机部署
+- **Docker Swarm**：Docker 原生的**轻量级集群编排**，管理多节点 Docker 主机。适合： 小规模集群（几～几十台）
+
+- **Kubernetes（k8s）**：业界标准的**容器编排平台**，支持大规模、复杂微服务架构。适合：中大型生产集群（几十～上万节点）
+
+# 3. 实战使用
 
 部署项目tms
 
-## 1. 准备工作
+## 3.1. 准备工作
 
 1. 在目录home/userxxx 下创建文件夹 tms及相关前后端文件夹
 
@@ -53,7 +74,7 @@ categories: docker
 
    Docker 注意修改默认挂载地址
 
-## 2. 部署中间件
+## 3.2. 部署中间件
 
 1. middleware目录下上传docker-compose.yml
 
@@ -140,7 +161,7 @@ categories: docker
          - tms
    ```
 
-## 3. 部署vue
+## 3.3 部署vue
 
 1. 进入前端目录，上传dist目录到web目录
 
@@ -261,7 +282,7 @@ http {
 }
 ```
 
-## 4. docker-compose部署后端
+## 3.4. docker-compose部署后端
 
 1. backend对应目录下上传jar包和docker-compose.yml
 
