@@ -22,9 +22,7 @@ cd docker-packages
 
 # 3. 准备需要的脚本
 
-## 3.1. docker.service
-
-将其中的ip地址，改成您的服务器地址，其它参数不用改。
+## 3.1. 创建 systemd 服务文件docker.service
 
 ```shell
 [Unit]
@@ -38,7 +36,7 @@ Type=notify
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
-ExecStart=/usr/bin/dockerd --selinux-enabled=false --insecure-registry=172.28.49.13
+ExecStart=/usr/bin/dockerd
 ExecReload=/bin/kill -s HUP $MAINPID
 # Having non-zero Limit*s causes performance problems due to accounting overhead
 # in the kernel. We recommend using cgroups to do container-local accounting.
