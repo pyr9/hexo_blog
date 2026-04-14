@@ -123,3 +123,39 @@ chmod +x uninstall.sh
 ```shell
 sh install.sh docker-26.1.4.tgz
 ```
+
+# 7. 修改Docker默认镜像和容器存储位置
+
+[Docker](https://so.csdn.net/so/search?q=Docker&spm=1001.2101.3001.7020) 默认安装的情况下，会使用 `/var/lib/docker/` 目录作为存储目录，用以存放拉取的镜像和创建的容器等。不过由于此目录一般都位于系统盘，遇到系统盘比较小，而镜像和容器多了后就容易磁盘空间不足
+
+- 查看当前[docker](https://so.csdn.net/so/search?q=docker&spm=1001.2101.3001.7020)的默认存储目录 `docker info` ,默认为`/var/lib/docker/` 
+
+- 查看磁盘空间，可以看到/data 目录最大，所以可以将地址设置为/data/docker
+
+  ```
+  [root@test_jenkins_for_mes workspace]# df -h
+  Filesystem               Size  Used Avail Use% Mounted on
+  devtmpfs                 3.9G     0  3.9G   0% /dev
+  tmpfs                    3.9G     0  3.9G   0% /dev/shm
+  tmpfs                    3.9G  297M  3.6G   8% /run
+  tmpfs                    3.9G     0  3.9G   0% /sys/fs/cgroup
+  /dev/mapper/centos-root   44G   39G  5.5G  88% /
+  /dev/sda1               1014M  151M  864M  15% /boot
+  /dev/mapper/datavg-data  200G   19G  182G  10% /data
+  overlay                  200G   19G  182G  10% /data/docker/overlay2/18b7d8f10d4f7f788ff391c04494b0bcc5dd6eb0deafd3f89a0caffd4e00f45f/merged
+  tmpfs                    783M     0  783M   0% /run/user/1001
+  ```
+
+  
+
+- 编辑 `/etc/docker/daemon.json` 文件
+
+  `sudo vim /etc/docker/daemon.json `
+
+  ```
+  {
+    "data-root": "/data/docker"
+  }
+  ```
+
+- 重启docker, 并查看 `docker info`
