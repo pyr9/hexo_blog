@@ -159,3 +159,9 @@ sh install.sh docker-26.1.4.tgz
   ```
 
 - 重启docker, 并查看 `docker info`
+
+  ```shell
+  systemctl restart docker
+  ```
+
+  
